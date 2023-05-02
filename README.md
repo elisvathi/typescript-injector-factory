@@ -19,7 +19,7 @@ const ExtractValue = factory.createInjector(
 	(payload, key: string, options: { required: boolean }) => {
 		const context: Context = payload.context;
 		const value = context[key];
-		if (value && options.required) {
+		if (!value && options.required) {
 			throw new Error(`${key} is required!`);
 		}
 		return value;
@@ -74,7 +74,7 @@ const instance: SampleClass = factory.with(concreteContext).construct(SampleClas
 factory.with(concreteContext).call(instance, "someMethod");
 // Age is 23
 
-// Method execution
+// Method execution with another context
 factory.with(someOtherContext).call(new SampleClass("John", "Doe"), "logAcount");
 // Account value is 100
 ```
