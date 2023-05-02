@@ -5,19 +5,21 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "ts-node src/index.ts",
+		"start": "ts-node examples/express.ts",
 		"build": "tsc"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"@types/express": "^4.17.17",
 		"@typescript-eslint/eslint-plugin": "^5.59.2",
 		"eslint": "^8.39.0",
 		"eslint-config-standard-with-typescript": "^34.0.1",
 		"eslint-plugin-import": "^2.27.5",
 		"eslint-plugin-n": "^15.7.0",
 		"eslint-plugin-promise": "^6.1.1",
+		"express": "^4.18.2",
 		"ts-node": "^10.9.1"
 	},
 	"dependencies": {
