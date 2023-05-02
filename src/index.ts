@@ -1,1 +1,1 @@
-console.log("hello");
+export { createInjectorFactory } from "./injectors/injectorFactory";
