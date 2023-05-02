@@ -121,3 +121,10 @@ app.listen(8080, "0.0.0.0", () => {
 	console.log(`Listening to 8080`);
 });
 ```
+
+TODO:
+
+-   [ ] Async resolvers
+-   [ ] Fix types in the API
+-   [ ] Fix types in the internal implemenation
+-   [ ] Typecheck and/or Throw error when calling a non-existent method
