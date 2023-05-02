@@ -8,12 +8,12 @@ constructor and method parameters.
 ```typescript
 import { createInjectorFactory } from "./injectors/injectorFactory";
 
-type Context = Record<string, unknown>; // The context of can be any type
+type Context = Record<string, unknown>; // The context can be any type
 const factory = createInjectorFactory<Context>();
 
 const ExtractValue = factory.createInjector(
 	/*
-	 * The extra parameters after they payload argument can be custom and the resulting
+	 * The extra parameters after the payload argument can be custom and the resulting
 	 * curried decorator will require them
 	 */
 	(payload, key: string, options: { required: boolean }) => {
