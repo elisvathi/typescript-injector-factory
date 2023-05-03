@@ -8,11 +8,10 @@ export class BoundFactory<TContext> implements InjectorResolver {
 		private readonly context: TContext
 	) {}
 
-	public call<
-		T extends Record<string, unknown>,
-		M extends MethodOf<T>,
-		TReturn
-	>(cl: T, name: string): TReturn {
+	public call<T extends Object, M extends MethodOf<T>, TReturn>(
+		cl: T,
+		name: string
+	): TReturn {
 		// TODO: Fix return type
 		const args = this.factory.methodArguments(this.context, cl, name);
 		// TODO: Fix type
@@ -56,11 +55,7 @@ export class BoundFactory<TContext> implements InjectorResolver {
 		return this.constructInstance(cl, constructorArgs, properties, proto);
 	}
 
-	public async callAsync<
-		T extends Record<string, unknown>,
-		M extends keyof T,
-		TReturn
-	>(
+	public async callAsync<T extends Object, M extends keyof T, TReturn>(
 		cl: T,
 		name: string,
 		options?: { sequential: boolean }

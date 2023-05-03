@@ -3,10 +3,7 @@ export type Class<T = unknown> = (new (...args: any[]) => T) & Function;
 export type InjectorFactoryOptions = {
 	injectPropertiesBeforeConstructor: boolean;
 };
-export type CreateInjectorPayloadBase<
-	TContext,
-	TClass extends Record<string, unknown>
-> = {
+export type CreateInjectorPayloadBase<TContext, TClass extends Object> = {
 	context: TContext;
 	type?: Class;
 	target: Class;
@@ -16,16 +13,13 @@ export type CreateInjectorPayloadBase<
 };
 export type CreateInjectorPayloadField<
 	TContext,
-	TClass extends Record<string, unknown>
+	TClass extends Object
 > = CreateInjectorPayloadBase<TContext, TClass>;
 export type CreateInjectorPayloadParameter<
 	TContext,
-	TClass extends Record<string, unknown>
+	TClass extends Object
 > = CreateInjectorPayloadBase<TContext, TClass> & { parameterIndex: number };
-export type CreateInjectorPayload<
-	TContext,
-	TClass extends Record<string, unknown>
-> =
+export type CreateInjectorPayload<TContext, TClass extends Object> =
 	| CreateInjectorPayloadField<TContext, TClass>
 	| CreateInjectorPayloadParameter<TContext, TClass>;
 
@@ -33,15 +27,12 @@ export type CreateInjectorFn<
 	TContext,
 	TReturn,
 	TArgs extends unknown[] = []
-> = <TClass extends Record<string, unknown>>(
+> = <TClass extends Object>(
 	payload: CreateInjectorPayload<TContext, TClass>,
 	...args: TArgs
 ) => TReturn;
 
-export type DefaultInjector<TContext> = <
-	TReturn,
-	TClass extends Record<string, unknown>
->(
+export type DefaultInjector<TContext> = <TReturn, TClass extends Object>(
 	payload: CreateInjectorPayload<TContext, TClass>
 ) => TReturn | undefined;
 export type MethodOf<TClass> = keyof TClass; // TODO: fix this type
@@ -49,11 +40,11 @@ export type MethodOf<TClass> = keyof TClass; // TODO: fix this type
 export type InjectorDecorator<TArgs extends unknown[]> = (
 	...args: TArgs
 ) => (
-	target: Record<string, unknown>,
+	target: Object,
 	propertyKey?: string | symbol,
 	parameterIndex?: number
 ) => void;
-export type Getter<
-	TContext,
-	T extends Record<string, unknown> = Record<string, unknown>
-> = (ctx: TContext, instance: T) => unknown;
+export type Getter<TContext, T extends Object = Object> = (
+	ctx: TContext,
+	instance: T
+) => unknown;

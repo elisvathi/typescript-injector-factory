@@ -37,7 +37,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		Map<string | symbol | undefined, Array<Getter<TContext>>>
 	>();
 
-	private buildInjectorPayload<T extends Record<string, unknown>>(
+	private buildInjectorPayload<T extends Object>(
 		context: TContext,
 		runtimeClassInstance: T,
 		propertyKey: string | symbol | undefined,
@@ -59,7 +59,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		const decorator =
 			(...args: TArgs) =>
 			(
-				target: Record<string, unknown>,
+				target: Object,
 				propertyKey?: string | symbol,
 				propertyIndex?: number
 			) => {
@@ -71,7 +71,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 						this.parameterMap.get(target.constructor as Class) ||
 						new Map<string | symbol, Array<Getter<TContext>>>();
 					const methodData = targetMap.get(propertyKey) || [];
-					const transformedFn = <T extends Record<string, unknown>>(
+					const transformedFn = <T extends Object>(
 						context: TContext,
 						runtimeClassInstance: T
 					) =>
@@ -94,7 +94,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 					const targetMap =
 						this.propertyMap.get(target.constructor as Class) ||
 						new Map<string | symbol, Getter<TContext>>();
-					const transformedFn = <T extends Record<string, unknown>>(
+					const transformedFn = <T extends Object>(
 						context: TContext,
 						runtimeClassInstance: T
 					) =>
@@ -114,7 +114,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		return decorator;
 	}
 
-	public methodArguments<T extends Record<string, unknown>>(
+	public methodArguments<T extends Object>(
 		ctx: TContext,
 		runtimeClassInstance: T,
 		methodName?: string | symbol
@@ -141,7 +141,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		});
 	}
 
-	private getMethodParametersLength<T extends Record<string, unknown>>(
+	private getMethodParametersLength<T extends Object>(
 		runtimeClassInstance: T,
 		methodName?: string | symbol | undefined
 	): number {
@@ -159,7 +159,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		return meta?.length || 0;
 	}
 
-	public fields<T extends Record<string, unknown>>(
+	public fields<T extends Object>(
 		ctx: TContext,
 		runtimeClassInstance: T
 	): Record<string, unknown> {
@@ -175,7 +175,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		return returnValue;
 	}
 
-	public async methodArgumentsAsync<T extends Record<string, unknown>>(
+	public async methodArgumentsAsync<T extends Object>(
 		context: TContext,
 		runtimeClassInstance: T,
 		methodName?: string | symbol,
@@ -226,7 +226,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 			);
 		}
 	}
-	public async fieldsAsync<T extends Record<string, unknown>>(
+	public async fieldsAsync<T extends Object>(
 		context: TContext,
 		runtimeClassInstance: T,
 		options?: { sequential: boolean }
@@ -261,7 +261,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		return returnValue;
 	}
 
-	private getDefalt<T extends Record<string, unknown>, TReturn>(
+	private getDefalt<T extends Object, TReturn>(
 		ctx: TContext,
 		runtimeClassInstance: T,
 		name?: string | symbol,
@@ -295,12 +295,4 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 	public with(ctx: TContext): InjectorResolver {
 		return new BoundFactory<TContext>(this, ctx);
 	}
-}
-export function createInjectorFactory<TContext>(
-	defaultInjector?: DefaultInjector<TContext>,
-	options: InjectorFactoryOptions = {
-		injectPropertiesBeforeConstructor: true,
-	}
-): InjectorBuilder<TContext> {
-	return new InjectorFactory<TContext>(defaultInjector, options);
 }
