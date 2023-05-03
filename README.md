@@ -125,6 +125,7 @@ app.listen(8080, "0.0.0.0", () => {
 TODO:
 
 -   [ ] Async resolvers
+-   [ ] Unit tests
 -   [ ] Fix types in the API
 -   [ ] Fix types in the internal implemenation
 -   [ ] Typecheck and/or Throw error when calling a non-existent method
