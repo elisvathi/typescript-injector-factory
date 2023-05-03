@@ -1,88 +1,19 @@
 import "reflect-metadata";
-type Class<T = unknown> = (new (...args: any[]) => T) & Function;
-type CreateInjectorPayloadBase<
-	TContext,
-	TClass extends Record<string, unknown>
-> = {
-	context: TContext;
-	type?: Class;
-	target: Class;
-	runtimeClassInstance: TClass;
-	returnType?: Class;
-	propertyKey: string | symbol | undefined;
-};
-type CreateInjectorPayloadField<
-	TContext,
-	TClass extends Record<string, unknown>
-> = CreateInjectorPayloadBase<TContext, TClass>;
-type CreateInjectorPayloadParameter<
-	TContext,
-	TClass extends Record<string, unknown>
-> = CreateInjectorPayloadBase<TContext, TClass> & { parameterIndex: number };
-type CreateInjectorPayload<TContext, TClass extends Record<string, unknown>> =
-	| CreateInjectorPayloadField<TContext, TClass>
-	| CreateInjectorPayloadParameter<TContext, TClass>;
+import { BoundFactory } from "./BoundFactory";
+import type { InjectorBuilder } from "./InjectorBuilder";
+import { InjectorResolver } from "./InjectorResolver";
+import type {
+	Class,
+	CreateInjectorFn,
+	CreateInjectorPayload,
+	DefaultInjector,
+	Getter,
+	InjectorDecorator,
+	InjectorFactoryOptions,
+	MethodOf,
+} from "./types";
 
-type CreateInjectorFn<TContext, TReturn, TArgs extends unknown[] = []> = <
-	TClass extends Record<string, unknown>
->(
-	payload: CreateInjectorPayload<TContext, TClass>,
-	...args: TArgs
-) => TReturn;
-
-type DefaultInjector<TContext> = <
-	TReturn,
-	TClass extends Record<string, unknown>
->(
-	payload: CreateInjectorPayload<TContext, TClass>
-) => TReturn | undefined;
-type MethodOf<TClass> = keyof TClass; // TODO: fix this type
-
-type InjectorDecorator<TArgs extends unknown[]> = (
-	...args: TArgs
-) => (
-	target: Record<string, unknown>,
-	propertyKey?: string | symbol,
-	parameterIndex?: number
-) => void;
-type Getter<
-	TContext,
-	T extends Record<string, unknown> = Record<string, unknown>
-> = (ctx: TContext, instance: T) => unknown;
-interface InjectorBuilder<TContext> {
-	createInjector<TReturn, TArgs extends unknown[] = []>(
-		fn: CreateInjectorFn<TContext, TReturn, TArgs>
-	): InjectorDecorator<TArgs>;
-	with(ctx: TContext): InjectorResolver;
-}
-interface InjectorResolver {
-	call<T extends Record<string, unknown>, M extends MethodOf<T>, TReturn>(
-		cl: T,
-		name: string
-	): TReturn;
-	callAsync<
-		T extends Record<string, unknown>,
-		M extends MethodOf<T>,
-		TReturn
-	>(
-		cl: T,
-		name: string,
-		options?: {
-			sequential?: boolean;
-		}
-	): Promise<TReturn>;
-	construct<T>(cl: Class<T>): T;
-	constructAsync<T>(
-		cl: Class<T>,
-		options?: { sequential: boolean }
-	): Promise<T>;
-}
-
-type InjectorFactoryOptions = {
-	injectPropertiesBeforeConstructor: boolean;
-};
-
-class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
+export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 	public constructor(
 		private readonly fn?: DefaultInjector<TContext>,
 		private readonly _options: InjectorFactoryOptions = {
@@ -363,99 +294,6 @@ class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 
 	public with(ctx: TContext): InjectorResolver {
 		return new BoundFactory<TContext>(this, ctx);
-	}
-}
-class BoundFactory<TContext> implements InjectorResolver {
-	public constructor(
-		private readonly factory: InjectorFactory<TContext>,
-		private readonly context: TContext
-	) {}
-
-	public call<
-		T extends Record<string, unknown>,
-		M extends MethodOf<T>,
-		TReturn
-	>(cl: T, name: string): TReturn {
-		// TODO: Fix return type
-		const args = this.factory.methodArguments(this.context, cl, name);
-		// TODO: Fix type
-		return (cl as any)[name](...args);
-	}
-	private constructInstance<T extends Object, TArgs extends unknown[]>(
-		cl: Class<T>,
-		constructorArgs: TArgs,
-		properties: Record<string, unknown>,
-		proto: T
-	): T {
-		const applyProps = () => {
-			Object.entries(properties).forEach(([key, value]) => {
-				proto[key as keyof T] = value as T[keyof T];
-			});
-		};
-
-		const applyConstructor = () => {
-			const instance = new cl(...constructorArgs);
-			Object.assign(proto, instance);
-		};
-
-		if (this.factory.options.injectPropertiesBeforeConstructor) {
-			applyProps();
-			applyConstructor();
-		} else {
-			applyProps();
-			applyConstructor();
-		}
-
-		return proto;
-	}
-
-	public construct<T>(cl: Class<T>): T {
-		const proto = Object.create(cl.prototype);
-		const properties = this.factory.fields(this.context, proto);
-		const constructorArgs = this.factory.methodArguments(
-			this.context,
-			proto
-		);
-		return this.constructInstance(cl, constructorArgs, properties, proto);
-	}
-
-	public async callAsync<
-		T extends Record<string, unknown>,
-		M extends keyof T,
-		TReturn
-	>(
-		cl: T,
-		name: string,
-		options?: { sequential: boolean }
-	): Promise<TReturn> {
-		// TODO: Fix return type
-		const args = await this.factory.methodArgumentsAsync(
-			this.context,
-			cl,
-			name,
-			options
-		);
-		// TODO: Fix type
-		return (cl as any)[name](...args);
-	}
-
-	public async constructAsync<T>(
-		cl: Class<T>,
-		options: { sequential: boolean }
-	): Promise<T> {
-		const proto = Object.create(cl.prototype);
-		const properties = await this.factory.fieldsAsync(
-			this.context,
-			proto,
-			options
-		);
-		const constructorArgs = await this.factory.methodArgumentsAsync(
-			this.context,
-			proto,
-			undefined,
-			options
-		);
-		return this.constructInstance(cl, constructorArgs, properties, proto);
 	}
 }
 export function createInjectorFactory<TContext>(

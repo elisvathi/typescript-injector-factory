@@ -1,1 +1,1 @@
-export { createInjectorFactory } from "./injectors/injectorFactory";
+export { createInjectorFactory } from "./injectors";
