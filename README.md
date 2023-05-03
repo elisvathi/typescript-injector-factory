@@ -86,6 +86,44 @@ If no injector is found and the default injector is not given it will throw an e
 const factory = createInjectorFactory<Context>((payload) => undefined);
 ```
 
+### Async injectors
+
+Async injectors work the same way but to invoke them you have to use
+`constructAsync(...)` and `callAsync(...)` instead
+
+```typescript
+import { createInjectorFactory } from "./injectors/injectorFactory";
+type Context = Record<string, unknown>; // The context can be any type
+const factory = createInjectorFactory<Context>();
+
+const CurrentUser = factory.createInjector(async ({context})=>{
+	await fetchUserFromSource(...)
+});
+
+const DbConnection = factory.createInjector(async ({context})=>{
+	await connectToDabase(...);
+});
+
+class Service {
+	public constructor(@DbConnection() private dbConnection: Connection) {
+	}
+
+	public getProfile(@CurrentUser() user: User) {
+		return user;
+	}
+}
+
+async function main() {
+	const service = factory.construct()
+	const resolver = factory.with({...});
+	const service: Service = await resolver.constructAsync(Service);
+	const user = await resolver.callAsync(service, "getProfile");
+	console.log(user);
+}
+
+main();
+```
+
 #### Examples
 
 Express example
@@ -124,8 +162,8 @@ app.listen(8080, "0.0.0.0", () => {
 
 TODO:
 
--   [ ] Async resolvers
--   [ ] Unit tests
+-   [x] Async resolvers
+-   [x] Unit tests
 -   [ ] Fix types in the API
 -   [ ] Fix types in the internal implemenation
 -   [ ] Typecheck and/or Throw error when calling a non-existent method

@@ -68,3 +68,42 @@ describe("Default injector tests", () => {
 		).toBe(456);
 	});
 });
+
+describe("Aync injectors", () => {
+	const factory = createInjectorFactory<Record<string, unknown>>();
+	const inject = factory.createInjector(async (p) => {
+		return await new Promise<any>((resolve) => {
+			setTimeout(() => resolve(p.context.value), 500);
+		});
+	});
+
+	test("Field injection", async () => {
+		class Test {
+			@inject()
+			public value?: number;
+		}
+		var instance = await factory.with({ value: 123 }).constructAsync(Test);
+		expect(instance.value).toBe(123);
+	});
+
+	test("Method injection", async () => {
+		class Test {
+			public method(@inject() value: number): number {
+				return value;
+			}
+		}
+		var instance = new Test();
+		expect(
+			await factory.with({ value: 123 }).callAsync(instance, "method")
+		).toBe(123);
+	});
+
+	test("Constructor injection", async () => {
+		class Test {
+			public constructor(@inject() public value: number) {}
+		}
+		expect(
+			(await factory.with({ value: 123 }).constructAsync(Test)).value
+		).toBe(123);
+	});
+});
