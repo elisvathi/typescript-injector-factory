@@ -1,16 +1,15 @@
 import "reflect-metadata";
+import { Class } from "../utilityTypes";
 import { BoundFactory } from "./BoundFactory";
 import type { InjectorBuilder } from "./InjectorBuilder";
 import { InjectorResolver } from "./InjectorResolver";
 import type {
-	Class,
 	CreateInjectorFn,
 	CreateInjectorPayload,
 	DefaultInjector,
 	Getter,
 	InjectorDecorator,
 	InjectorFactoryOptions,
-	MethodOf,
 } from "./types";
 
 export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {

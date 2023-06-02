@@ -1,4 +1,4 @@
-export type Class<T = unknown> = (new (...args: any[]) => T) & Function;
+import type { Class } from "../utilityTypes";
 
 export type InjectorFactoryOptions = {
 	injectPropertiesBeforeConstructor: boolean;
@@ -11,14 +11,17 @@ export type CreateInjectorPayloadBase<TContext, TClass extends Object> = {
 	returnType?: Class;
 	propertyKey: string | symbol | undefined;
 };
+
 export type CreateInjectorPayloadField<
 	TContext,
 	TClass extends Object
 > = CreateInjectorPayloadBase<TContext, TClass>;
+
 export type CreateInjectorPayloadParameter<
 	TContext,
 	TClass extends Object
 > = CreateInjectorPayloadBase<TContext, TClass> & { parameterIndex: number };
+
 export type CreateInjectorPayload<TContext, TClass extends Object> =
 	| CreateInjectorPayloadField<TContext, TClass>
 	| CreateInjectorPayloadParameter<TContext, TClass>;
@@ -35,7 +38,6 @@ export type CreateInjectorFn<
 export type DefaultInjector<TContext> = <TReturn, TClass extends Object>(
 	payload: CreateInjectorPayload<TContext, TClass>
 ) => TReturn | undefined;
-export type MethodOf<TClass> = keyof TClass; // TODO: fix this type
 
 export type InjectorDecorator<TArgs extends unknown[]> = (
 	...args: TArgs
@@ -44,6 +46,7 @@ export type InjectorDecorator<TArgs extends unknown[]> = (
 	propertyKey?: string | symbol,
 	parameterIndex?: number
 ) => void;
+
 export type Getter<TContext, T extends Object = Object> = (
 	ctx: TContext,
 	instance: T

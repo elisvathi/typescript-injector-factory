@@ -1,6 +1,6 @@
+import { Class, MethodOf } from "../utilityTypes";
 import { InjectorFactory } from "./InjectorFactory";
 import type { InjectorResolver } from "./InjectorResolver";
-import type { Class, MethodOf } from "./types";
 
 export class BoundFactory<TContext> implements InjectorResolver {
 	public constructor(

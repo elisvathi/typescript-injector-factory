@@ -41,7 +41,7 @@ describe("Default injector tests", () => {
 	test("Method injection", () => {
 		class Test {
 			public method(
-				@inject() value: number,
+				@inject() _value: number,
 				secondValue: number
 			): number {
 				return secondValue;

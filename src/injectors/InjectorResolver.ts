@@ -1,4 +1,4 @@
-import type { Class, MethodOf } from "./types";
+import type { Class, MethodOf } from "../utilityTypes";
 
 export interface InjectorResolver {
 	call<T extends Object, M extends MethodOf<T>, TReturn>(
