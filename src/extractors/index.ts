@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { Class } from "../utilityTypes";
 
 const PARAM_TYPES_KEY = "design:paramtypes";
