@@ -11,6 +11,7 @@ import type {
 	InjectorDecorator,
 	InjectorFactoryOptions,
 } from "./types";
+import { extractParameterType, extractPropertyType } from "../extractors";
 
 export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 	public constructor(
@@ -48,7 +49,16 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 			propertyKey,
 			runtimeClassInstance,
 			parameterIndex,
-			// Type: //TODO
+			type:
+				parameterIndex !== undefined
+					? extractParameterType(
+							runtimeClassInstance,
+							propertyKey,
+							parameterIndex
+					  )
+					: propertyKey !== undefined
+					? extractPropertyType(runtimeClassInstance, propertyKey)
+					: Object,
 		};
 	}
 

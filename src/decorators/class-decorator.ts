@@ -1,10 +1,15 @@
+import { extractMethodParamTypes } from "../extractors";
 import { Class } from "../utilityTypes";
 
 export type ClassDecorator<TArgs extends unknown[]> = (
 	...args: TArgs
 ) => (target: Class) => void;
 
-export type ClassTransformerPayload = { class: Class };
+export type ClassTransformerPayload = {
+	class: Class;
+	constructorParameters: Array<Class>;
+};
+
 export type ClassExtractors<TMeta> = {
 	getClasses: () => Array<Class>;
 	getValue: (cl: Class) => TMeta | undefined;
@@ -17,7 +22,15 @@ function createClassDecoratorSingle<TMeta, TArgs extends unknown[] = []>(
 	const decorator =
 		(...args: TArgs) =>
 		(target: Class) => {
-			const saveData = transformer({ class: target }, ...args);
+			const saveData = transformer(
+				{
+					class: target,
+					constructorParameters: extractMethodParamTypes(
+						target.prototype
+					),
+				},
+				...args
+			);
 			map.set(target, saveData);
 		};
 	const extracors: ClassExtractors<TMeta> = {
@@ -37,7 +50,15 @@ function createClassDecoratorMulti<
 	const decorator =
 		(...args: TArgs) =>
 		(target: Class) => {
-			const saveData = transformer({ class: target }, ...args);
+			const saveData = transformer(
+				{
+					class: target,
+					constructorParameters: extractMethodParamTypes(
+						target.prototype
+					),
+				},
+				...args
+			);
 			const current = map.get(target) || [];
 			current.push(saveData);
 			map.set(target, current);

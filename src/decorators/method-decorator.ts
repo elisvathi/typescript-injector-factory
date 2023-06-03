@@ -1,3 +1,7 @@
+import {
+	extractMethodParamTypes,
+	extractMethodReturnType,
+} from "../extractors";
 import { Class } from "../utilityTypes";
 
 export type MethodDecorator<TArgs extends unknown[]> = (
@@ -18,6 +22,8 @@ export type MethodTransformerPayload<T> = {
 	target: Class;
 	name: string | symbol;
 	descriptor: TypedPropertyDescriptor<T>;
+	paramTypes: Array<Class>;
+	returnType: Class;
 };
 
 function createMethodDecoratorSingle<
@@ -42,6 +48,8 @@ function createMethodDecoratorSingle<
 					target: target.constructor as Class,
 					name: propertyKey,
 					descriptor,
+					paramTypes: extractMethodParamTypes(target, propertyKey),
+					returnType: extractMethodReturnType(target, propertyKey),
 				},
 				...args
 			);
@@ -80,6 +88,8 @@ function createMethodDecoratorMulti<TMeta, TArgs extends unknown[] = unknown[]>(
 					target: target.constructor as Class,
 					name: propertyKey,
 					descriptor,
+					paramTypes: extractMethodParamTypes(target, propertyKey),
+					returnType: extractMethodReturnType(target, propertyKey),
 				},
 				...args
 			);

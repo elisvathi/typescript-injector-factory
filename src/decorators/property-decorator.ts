@@ -1,3 +1,4 @@
+import { extractPropertyType } from "../extractors";
 import { Class } from "../utilityTypes";
 
 export type PropertyDecorator<TArgs extends unknown[]> = (
@@ -13,6 +14,7 @@ export type PropertyExtractors<TMeta> = {
 export type PropertyTransformerPayload = {
 	target: Class;
 	name: string | symbol;
+	type: Class;
 };
 
 function createPropertyDecoratorSingle<
@@ -29,6 +31,7 @@ function createPropertyDecoratorSingle<
 				{
 					target: target.constructor as Class,
 					name: propertyKey,
+					type: extractPropertyType(target, propertyKey),
 				},
 				...args
 			);
@@ -62,6 +65,7 @@ function createPropertyDecoratorMulti<
 				{
 					target: target.constructor as Class,
 					name: propertyKey,
+					type: extractPropertyType(target, propertyKey),
 				},
 				...args
 			);

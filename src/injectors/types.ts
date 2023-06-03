@@ -5,7 +5,7 @@ export type InjectorFactoryOptions = {
 };
 export type CreateInjectorPayloadBase<TContext, TClass extends Object> = {
 	context: TContext;
-	type?: Class;
+	type: Class;
 	target: Class;
 	runtimeClassInstance: TClass;
 	returnType?: Class;

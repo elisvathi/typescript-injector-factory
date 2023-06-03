@@ -1,3 +1,4 @@
+import { extractParameterType } from "../extractors";
 import { Class } from "../utilityTypes";
 
 export type ParameterDecorator<TArgs extends unknown[]> = (
@@ -26,6 +27,7 @@ export type ParameterTransformerPayload = {
 	target: Class;
 	name: string | symbol | undefined;
 	parameterIndex: number;
+	type: Class;
 };
 
 function createParameterDecoratorSingle<
@@ -50,6 +52,11 @@ function createParameterDecoratorSingle<
 					target: target.constructor as Class,
 					name: propertyKey,
 					parameterIndex,
+					type: extractParameterType(
+						target,
+						propertyKey,
+						parameterIndex
+					),
 				},
 				...args
 			);
@@ -108,6 +115,11 @@ function createParameterDecoratorMulti<
 					target: target.constructor as Class,
 					name: propertyKey,
 					parameterIndex,
+					type: extractParameterType(
+						target,
+						propertyKey,
+						parameterIndex
+					),
 				},
 				...args
 			);
