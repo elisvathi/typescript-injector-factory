@@ -1,5 +1,5 @@
 import type { InjectorBuilder } from "./InjectorBuilder";
-import { InjectorFactory } from "./InjectorFactory";
+import { InjectorFactory } from "./injectorFactory";
 import type { DefaultInjector, InjectorFactoryOptions } from "./types";
 
 export function createInjectorFactory<TContext>(

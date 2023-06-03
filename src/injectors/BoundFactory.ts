@@ -1,5 +1,5 @@
 import { Class, MethodOf } from "../utilityTypes";
-import { InjectorFactory } from "./InjectorFactory";
+import { InjectorFactory } from "./injectorFactory";
 import type { InjectorResolver } from "./InjectorResolver";
 
 export class BoundFactory<TContext> implements InjectorResolver {
