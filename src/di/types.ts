@@ -1,0 +1,5 @@
+export enum ServiceScope {
+	SINGLETON = "SINGLETON",
+	TRANSIENT = "TRANSIENT",
+	REQUEST = "REQUEST",
+}

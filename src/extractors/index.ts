@@ -34,3 +34,15 @@ export function extractParameterType<T extends Object>(
 	const paramTypes = extractMethodParamTypes(instance, methodName);
 	return paramTypes[parameterIndex] || Object;
 }
+
+export function getInheritanceHierarchy<T>(
+	cl: Class<T>,
+	accumulator: Class[] = []
+): Class[] {
+	const newAccumulator = [...accumulator, cl];
+	const proto = Object.getPrototypeOf(cl);
+	if (typeof proto !== "function") {
+		return newAccumulator;
+	}
+	return getInheritanceHierarchy(proto, newAccumulator);
+}

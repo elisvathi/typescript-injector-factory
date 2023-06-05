@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { Class } from "../utilityTypes";
 import { BoundFactory } from "./BoundFactory";
 import type { InjectorBuilder } from "./InjectorBuilder";
@@ -10,11 +11,6 @@ import type {
 	InjectorDecorator,
 	InjectorFactoryOptions,
 } from "./types";
-import {
-	extractMethodParamTypes,
-	extractParameterType,
-	extractPropertyType,
-} from "../extractors";
 
 export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 	public constructor(
@@ -52,16 +48,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 			propertyKey,
 			runtimeClassInstance,
 			parameterIndex,
-			type:
-				parameterIndex !== undefined
-					? extractParameterType(
-							runtimeClassInstance,
-							propertyKey,
-							parameterIndex
-					  )
-					: propertyKey !== undefined
-					? extractPropertyType(runtimeClassInstance, propertyKey)
-					: Object,
+			// Type: //TODO
 		};
 	}
 
@@ -157,7 +144,18 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		runtimeClassInstance: T,
 		methodName?: string | symbol | undefined
 	): number {
-		return extractMethodParamTypes(runtimeClassInstance, methodName).length;
+		const PARAM_TYPES_KEY = "design:paramtypes";
+		const meta: Class[] = methodName
+			? Reflect.getMetadata(
+					PARAM_TYPES_KEY,
+					runtimeClassInstance,
+					methodName
+			  )
+			: Reflect.getMetadata(
+					PARAM_TYPES_KEY,
+					runtimeClassInstance.constructor
+			  );
+		return meta?.length || 0;
 	}
 
 	public fields<T extends Object>(
