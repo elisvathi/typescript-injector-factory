@@ -1,4 +1,4 @@
-import { Class, MethodOf } from "../utilityTypes";
+import { Class, MethodOf } from "../../utilityTypes";
 import { InjectorFactory } from "./injectorFactory";
 import type { InjectorResolver } from "./InjectorResolver";
 
@@ -50,7 +50,8 @@ export class BoundFactory<TContext> implements InjectorResolver {
 		const properties = this.factory.fields(this.context, proto);
 		const constructorArgs = this.factory.methodArguments(
 			this.context,
-			proto
+			proto,
+			undefined
 		);
 		return this.constructInstance(cl, constructorArgs, properties, proto);
 	}

@@ -1,5 +1,5 @@
 import type { InjectorResolver } from "./InjectorResolver";
-import type { CreateInjectorFn, InjectorDecorator } from "./types";
+import type { CreateInjectorFn, InjectorDecorator } from "../types";
 
 export interface InjectorBuilder<TContext> {
 	createInjector<TReturn, TArgs extends unknown[] = []>(

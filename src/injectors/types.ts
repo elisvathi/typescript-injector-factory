@@ -10,6 +10,7 @@ export type CreateInjectorPayloadBase<TContext, TClass extends Object> = {
 	runtimeClassInstance: TClass;
 	returnType?: Class;
 	propertyKey: string | symbol | undefined;
+	async: boolean;
 };
 
 export type CreateInjectorPayloadField<
