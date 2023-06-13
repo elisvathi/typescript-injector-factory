@@ -1,29 +1,29 @@
 import { Class } from "../../utilityTypes";
 import type { DefaultInjector } from "../types";
-import { Getter } from "./Getter";
-import { IGetter } from "./IGetter";
-import { DefaultGetter } from "./DefaultGetter";
+import { ValueGetter } from "./ValueGetter";
+import { AbstractValueGetter } from "./AbstractValueGetter";
+import { DefaultValueGetter } from "./DefaultValueGetter";
 
-export class GetterRepository<TContext> {
+export class ValueGetterRepository<TContext> {
 	public constructor(private defaultInjector?: DefaultInjector<TContext>) {}
 	private readonly propertyMap = new Map<
 		Class,
-		Map<string | symbol, Getter<TContext>>
+		Map<string | symbol, ValueGetter<TContext>>
 	>();
 
 	private readonly parameterMap = new Map<
 		Class,
-		Map<string | symbol | undefined, Array<Getter<TContext>>>
+		Map<string | symbol | undefined, Array<ValueGetter<TContext>>>
 	>();
 
 	public setPropertyGetter<T>(
 		cl: Class<T>,
 		propertyKey: string | symbol,
-		getter: Getter<TContext>
+		getter: ValueGetter<TContext>
 	): void {
 		const clMap =
 			this.propertyMap.get(cl) ||
-			new Map<string | symbol, Getter<TContext>>();
+			new Map<string | symbol, ValueGetter<TContext>>();
 		clMap.set(propertyKey, getter);
 		this.propertyMap.set(cl, clMap);
 	}
@@ -31,19 +31,19 @@ export class GetterRepository<TContext> {
 	public getPropertyGetter<T>(
 		cl: Class<T>,
 		propertyKey: string | symbol
-	): IGetter<TContext> {
+	): AbstractValueGetter<TContext> {
 		return (
 			this.propertyMap.get(cl)?.get(propertyKey) ||
-			new DefaultGetter(this.defaultInjector)
+			new DefaultValueGetter(this.defaultInjector)
 		);
 	}
 
 	public getAllPropertyGetters(
 		cl: Class
-	): Map<string | symbol, Getter<TContext>> {
+	): Map<string | symbol, ValueGetter<TContext>> {
 		return (
 			this.propertyMap.get(cl) ||
-			new Map<string | symbol, Getter<TContext>>()
+			new Map<string | symbol, ValueGetter<TContext>>()
 		);
 	}
 
@@ -51,11 +51,11 @@ export class GetterRepository<TContext> {
 		cl: Class<T>,
 		propertyKey: string | symbol | undefined,
 		parameterIndex: number,
-		getter: Getter<TContext>
+		getter: ValueGetter<TContext>
 	): void {
 		const clMap =
 			this.parameterMap.get(cl) ||
-			new Map<string | symbol | undefined, Array<Getter<TContext>>>();
+			new Map<string | symbol | undefined, Array<ValueGetter<TContext>>>();
 		const propParameters = clMap.get(propertyKey) || [];
 		propParameters[parameterIndex] = getter;
 		clMap.set(propertyKey, propParameters);
@@ -66,17 +66,17 @@ export class GetterRepository<TContext> {
 		cl: Class<T>,
 		propertyKey: string | symbol | undefined,
 		parameterIndex: number
-	): IGetter<TContext> {
+	): AbstractValueGetter<TContext> {
 		return (
 			this.parameterMap.get(cl)?.get(propertyKey)?.at(parameterIndex) ||
-			new DefaultGetter(this.defaultInjector)
+			new DefaultValueGetter(this.defaultInjector, undefined, parameterIndex)
 		);
 	}
 
 	public getAllParameterGetters<T>(
 		cl: Class<T>,
 		propertyKey: string | symbol | undefined
-	): Array<IGetter<TContext>> {
+	): Array<AbstractValueGetter<TContext>> {
 		return this.parameterMap.get(cl)?.get(propertyKey) || [];
 	}
 }

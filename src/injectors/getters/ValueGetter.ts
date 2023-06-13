@@ -1,12 +1,12 @@
 import type { CreateInjectorFn } from "../types";
-import { IGetter } from "./IGetter";
+import { AbstractValueGetter } from "./AbstractValueGetter";
 
-export class Getter<
+export class ValueGetter<
 	TContext,
 	TArgs extends unknown[] = unknown[],
 	TReturn = unknown
-> extends IGetter<TContext> {
-	private fn: (
+> extends AbstractValueGetter<TContext> {
+	private readonly fn: (
 		async: boolean
 	) => <T extends Object>(
 		ctx: TContext,

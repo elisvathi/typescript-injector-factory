@@ -5,6 +5,7 @@ import { ServiceScope } from "./types";
 describe("Di tests", () => {
 	test("Simple constructor injection DI (singleton)", () => {
 		GlobalDiContainer.set("ABC", 13);
+
 		@Component({ scope: ServiceScope.SINGLETON })
 		class A {
 			public constructor(@Inject("ABC") public value: number = 1) {}
@@ -35,6 +36,7 @@ describe("Di tests", () => {
 		expect(b?.a.value).toBe(3);
 		expect(c?.a.value).toBe(3);
 	});
+
 	test("Simple constructor injection DI (transient)", () => {
 		GlobalDiContainer.set("ABC", 13);
 		@Component({ scope: ServiceScope.TRANSIENT })

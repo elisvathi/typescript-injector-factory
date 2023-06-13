@@ -9,8 +9,8 @@ import type {
 	InjectorDecorator,
 	InjectorFactoryOptions,
 } from "../types";
-import { Getter } from "../getters/Getter";
-import { GetterRepository } from "../getters/GetterRepository";
+import { ValueGetter } from "../getters/ValueGetter";
+import { ValueGetterRepository } from "../getters/ValueGetterRepository";
 
 export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 	private readonly getterRepository;
@@ -21,7 +21,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 			injectPropertiesBeforeConstructor: true,
 		}
 	) {
-		this.getterRepository = new GetterRepository<TContext>(fn);
+		this.getterRepository = new ValueGetterRepository<TContext>(fn);
 		Object.seal(this._options);
 	}
 
@@ -46,13 +46,13 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 						targetConstructor,
 						propertyKey,
 						parameterIndex,
-						new Getter(fn, propertyKey, parameterIndex, args)
+						new ValueGetter(fn, propertyKey, parameterIndex, args)
 					);
 				} else if (propertyKey) {
 					this.getterRepository.setPropertyGetter(
 						targetConstructor,
 						propertyKey,
-						new Getter(fn, propertyKey, parameterIndex, args)
+						new ValueGetter(fn, propertyKey, parameterIndex, args)
 					);
 				}
 			};
@@ -76,7 +76,6 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 			return getter.call(ctx, runtimeClassInstance, false);
 		});
 	}
-
 
 	public fields<T extends Object>(
 		ctx: TContext,
@@ -149,7 +148,7 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		const returnValue: Record<string | symbol, unknown> = {};
 		if (options && options.sequential) {
 			for (const [key, getter] of (
-				clMap || new Map<string, Getter<TContext>>()
+				clMap || new Map<string, ValueGetter<TContext>>()
 			).entries()) {
 				if (key) {
 					returnValue[key] = await getter.call(
@@ -163,7 +162,9 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		} else {
 			await Promise.all(
 				Array.from(
-					(clMap || new Map<string, Getter<TContext>>()).entries()
+					(
+						clMap || new Map<string, ValueGetter<TContext>>()
+					).entries()
 				).map(async ([key, getter]) => {
 					if (key) {
 						returnValue[key] = await getter.call(
@@ -189,15 +190,14 @@ export class InjectorFactory<TContext> implements InjectorBuilder<TContext> {
 		const PARAM_TYPES_KEY = "design:paramtypes";
 		const meta: Class[] = methodName
 			? Reflect.getMetadata(
-				PARAM_TYPES_KEY,
-				runtimeClassInstance,
-				methodName
-			)
+					PARAM_TYPES_KEY,
+					runtimeClassInstance,
+					methodName
+			  )
 			: Reflect.getMetadata(
-				PARAM_TYPES_KEY,
-				runtimeClassInstance.constructor
-			);
+					PARAM_TYPES_KEY,
+					runtimeClassInstance.constructor
+			  );
 		return meta?.length || 0;
 	}
-
 }

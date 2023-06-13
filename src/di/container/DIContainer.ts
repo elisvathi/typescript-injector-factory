@@ -46,7 +46,7 @@ class DiContainer implements IDIContainer {
 	private async constructAndSaveAsync<T>(key: Class<T>): Promise<T> {
 		const constructed =
 			this.serviceMap.get(key) ||
-			injectorFactory.with(this).constructAsync(key);
+			(await injectorFactory.with(this).constructAsync(key));
 		if (isInitializable(constructed)) {
 			await constructed.init();
 		}
