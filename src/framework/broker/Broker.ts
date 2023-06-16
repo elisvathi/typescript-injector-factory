@@ -1,6 +1,6 @@
 import { Class } from "../../utilityTypes";
-import { filterBrokerExtractor } from "../decorators/broker";
 import { EndpointRegistry } from "../registry/EndpointRegistry";
+import { filterBrokerExtractor } from "./filter-decorators";
 
 export abstract class Broker {
 	public constructor(registry: EndpointRegistry) {

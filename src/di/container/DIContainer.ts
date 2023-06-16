@@ -1,26 +1,60 @@
-import type { Class } from "../../utilityTypes";
-import { componentExtractor } from "../decorators/component";
-import { injectorFactory } from "../decorators/inject";
-import { ServiceScope } from "../types";
-import { IDIContainer } from "./IDIContainer";
-import { Token } from "./Token";
+import type { Class } from '../../utilityTypes'
+import { componentExtractor } from '../decorators/component'
+import { injectorFactory } from '../decorators/inject'
+import { ServiceScope } from '../types'
+import { AsyncResolver, IDIContainer, IResolverContainer, SyncResolver, } from './IDIContainer'
+import { Token } from './Token'
 
 export interface Initializable {
 	init(): Promise<void>;
 }
 
+const scopeMistmatchError = (key: Class | Token | string) => {
+	const message = `Cannot provide [${key}] instance from this container!
+A REQUEST scoped service cannot be provided by a top level container! M
+ake sure you are not using [${key}] inside a service that is Singleton Scoped (or does not have scope specified)`;
+	throw new Error(message);
+};
+
 export function isInitializable(cl: Object): cl is Initializable {
 	return (
-		Object.getOwnPropertyNames(cl).includes("init") &&
+		Object.getOwnPropertyNames(Object.getPrototypeOf(cl)).includes("init") &&
 		typeof (cl as any)["init"] == "function"
 	);
 }
 
-class DiContainer implements IDIContainer {
+class DiContainer implements IDIContainer, IResolverContainer {
 	private static instance?: DiContainer;
 	private serviceMap: Map<Class | string | Token, any> = new Map();
-	private parent?: IDIContainer;
+	private parent?: IDIContainer & IResolverContainer;
+	private syncResolvers: Map<
+		Class | string | Token,
+		{ resolver: SyncResolver; scope: ServiceScope }
+	> = new Map();
+	private asyncResolvers: Map<
+		Class | string | Token,
+		{ resolver: AsyncResolver; scope: ServiceScope }
+	> = new Map();
+
 	private constructor() {}
+
+	public getResolver<T>(
+		key: string | Class<T> | Token<T>
+	): { resolver: SyncResolver; scope: ServiceScope } | undefined {
+		if (this.isChild) {
+			return this.parent?.getResolver(key);
+		}
+		return this.syncResolvers.get(key);
+	}
+
+	public getAsyncResolver<T>(
+		key: string | Class<T> | Token<T>
+	): { resolver: AsyncResolver; scope: ServiceScope } | undefined {
+		if (this.isChild) {
+			return this.parent?.getAsyncResolver(key);
+		}
+		return this.syncResolvers.get(key);
+	}
 
 	public set<T>(key: string | Token<T>, value: T): void {
 		this.serviceMap.set(key, value);
@@ -43,6 +77,204 @@ class DiContainer implements IDIContainer {
 		return this.instance;
 	}
 
+	public getAsync<T>(key: Class<T>): Promise<T | undefined>;
+	public getAsync<T>(key: Token<T>): Promise<T | undefined>;
+	public getAsync<T>(key: string): Promise<T | undefined>;
+	public async getAsync<T>(
+		key: Class<T> | Token<T> | string
+	): Promise<T | undefined> {
+		const resolver = this.getAsyncResolver(key);
+		if (resolver) {
+			return this.getAndSaveFromResolverAsync(
+				key,
+				resolver.resolver,
+				resolver.scope
+			);
+		}
+		if (typeof key === "function") {
+			const cl = key as Class<T>;
+			let scope =
+				componentExtractor.getValue(cl)?.options?.scope ||
+				ServiceScope.SINGLETON;
+			if (scope === ServiceScope.SINGLETON) {
+				if (this.isChild) {
+					return await this.parent?.getAsync(cl);
+				}
+				return await this.constructAndSaveAsync(cl);
+			}
+			if (scope === ServiceScope.REQUEST) {
+				if (!this.isChild) {
+					scopeMistmatchError(key);
+				}
+				return await this.constructAndSaveAsync(cl);
+			} else {
+				return injectorFactory.with(this).constructAsync(cl);
+			}
+		} else {
+			return (
+				this.serviceMap.get(key) || (await this.parent?.getAsync(key))
+			);
+		}
+	}
+
+	public get<T>(key: Class<T>): T | undefined;
+	public get<T>(key: Token<T>): T | undefined;
+	public get<T>(key: string): T | undefined;
+	public get<T>(key: Class<T> | Token<T> | string): T | undefined {
+		const resolver = this.getResolver(key);
+		if (resolver) {
+			return this.getAndSaveFromResolverSync(
+				key,
+				resolver.resolver,
+				resolver.scope
+			);
+		}
+		if (typeof key === "function") {
+			const cl = key as Class<T>;
+			let scope =
+				componentExtractor.getValue(cl)?.options?.scope ||
+				ServiceScope.SINGLETON;
+			if (scope === ServiceScope.SINGLETON) {
+				if (this.isChild) {
+					return this.parent?.get(cl);
+				}
+				return this.constructAndSave(cl);
+			}
+			if (scope === ServiceScope.REQUEST) {
+				if (!this.isChild) {
+					scopeMistmatchError(key);
+				}
+				return this.constructAndSave(cl);
+			} else {
+				return injectorFactory.with(this).construct(cl);
+			}
+		} else {
+			return this.serviceMap.get(key) || this.parent?.get(key);
+		}
+	}
+
+	public setAsyncResolver<T>(
+		key: Class<T>,
+		resolver: AsyncResolver,
+		scope: ServiceScope
+	): void;
+	public setAsyncResolver<T>(
+		key: Token<T>,
+		resolver: AsyncResolver,
+		scope: ServiceScope
+	): void;
+	public setAsyncResolver(
+		key: string,
+		resolver: AsyncResolver,
+		scope: ServiceScope
+	): void;
+	public setAsyncResolver(
+		key: Class | Token | string,
+		resolver: AsyncResolver,
+		scope: ServiceScope
+	): void {
+		this.asyncResolvers.set(key, { resolver, scope });
+	}
+
+	public setResolver<T>(
+		key: Class<T>,
+		resolver: SyncResolver,
+		scope: ServiceScope
+	): void;
+	public setResolver<T>(
+		key: Token<T>,
+		resolver: SyncResolver,
+		scope: ServiceScope
+	): void;
+	public setResolver(
+		key: string,
+		resolver: SyncResolver,
+		scope: ServiceScope
+	): void;
+	public setResolver(
+		key: Class | Token | string,
+		resolver: SyncResolver,
+		scope: ServiceScope
+	): void {
+		this.syncResolvers.set(key, { resolver, scope });
+	}
+
+	private async getAndSaveFromResolverAsync<T>(
+		key: Class<T> | Token<T> | string,
+		resolver: AsyncResolver,
+		scope: ServiceScope
+	): Promise<T | undefined> {
+		switch (scope) {
+			case ServiceScope.TRANSIENT: {
+				return await resolver<T>(this);
+			}
+			case ServiceScope.SINGLETON: {
+				if (this.isChild) {
+					return await this.parent?.getAsync(key);
+				} else {
+					const existing = this.serviceMap.get(key);
+					if (existing) {
+						return existing;
+					}
+					const value = await resolver<T>(this);
+					this.serviceMap.set(key, value);
+					return value;
+				}
+			}
+			case ServiceScope.REQUEST: {
+				if (this.isChild) {
+					const existing = this.serviceMap.get(key);
+					if (existing) {
+						return existing;
+					}
+					const value = await resolver<T>(this);
+					this.serviceMap.set(key, value);
+					return value;
+				} else {
+					scopeMistmatchError(key);
+				}
+			}
+		}
+	}
+
+	private getAndSaveFromResolverSync<T>(
+		key: Class<T> | Token<T> | string,
+		resolver: SyncResolver,
+		scope: ServiceScope
+	): T | undefined {
+		switch (scope) {
+			case ServiceScope.TRANSIENT: {
+				return resolver<T>(this);
+			}
+			case ServiceScope.SINGLETON: {
+				if (this.isChild) {
+					return this.parent?.get(key);
+				} else {
+					const existing = this.serviceMap.get(key);
+					if (existing) {
+						return existing;
+					}
+					const value = resolver<T>(this);
+					this.serviceMap.set(key, value);
+					return value;
+				}
+			}
+			case ServiceScope.REQUEST: {
+				if (this.isChild) {
+					const existing = this.serviceMap.get(key);
+					if (existing) {
+						return existing;
+					}
+					const value = resolver<T>(this);
+					this.serviceMap.set(key, value);
+					return value;
+				} else {
+					scopeMistmatchError(key);
+				}
+			}
+		}
+	}
+
 	private async constructAndSaveAsync<T>(key: Class<T>): Promise<T> {
 		const constructed =
 			this.serviceMap.get(key) ||
@@ -61,80 +293,8 @@ class DiContainer implements IDIContainer {
 		this.serviceMap.set(key, constructed);
 		return constructed;
 	}
-
-	public getAsync<T>(key: Class<T>): Promise<T | undefined>;
-	public getAsync<T>(key: Token<T>): Promise<T | undefined>;
-	public getAsync<T>(key: string): Promise<T | undefined>;
-	public async getAsync<T>(
-		key: Class<T> | Token<T> | string
-	): Promise<T | undefined> {
-		if (typeof key === "function") {
-			const cl = key as Class<T>;
-			let scope =
-				componentExtractor.getValue(cl)?.options?.scope ||
-				ServiceScope.SINGLETON;
-			if (scope === ServiceScope.SINGLETON) {
-				if (this.isChild) {
-					return await this.parent?.getAsync(cl);
-				}
-				return await this.constructAndSaveAsync(cl);
-			}
-			if (scope === ServiceScope.REQUEST) {
-				if (!this.isChild) {
-					throw new Error(
-						`
-Cannot provide [${cl.name}] instance from this container!
-A REQUEST scoped service cannot be provided by a top level container! M
-ake sure you are not using [${cl.name}] inside a service that is Singleton Scoped (or does not have scope specified)
-						`
-					);
-				}
-				return await this.constructAndSaveAsync(cl);
-			} else {
-				return injectorFactory.with(this).constructAsync(cl);
-			}
-		} else {
-			return (
-				this.serviceMap.get(key) || (await this.parent?.getAsync(key))
-			);
-		}
-	}
-
-	public get<T>(key: Class<T>): T | undefined;
-	public get<T>(key: Token<T>): T | undefined;
-	public get<T>(key: string): T | undefined;
-	public get<T>(key: Class<T> | Token<T> | string): T | undefined {
-		if (typeof key === "function") {
-			const cl = key as Class<T>;
-			let scope =
-				componentExtractor.getValue(cl)?.options?.scope ||
-				ServiceScope.SINGLETON;
-			if (scope === ServiceScope.SINGLETON) {
-				if (this.isChild) {
-					return this.parent?.get(cl);
-				}
-				return this.constructAndSave(cl);
-			}
-			if (scope === ServiceScope.REQUEST) {
-				if (!this.isChild) {
-					throw new Error(
-						`
-Cannot provide [${cl.name}] instance from this container!
-A REQUEST scoped service cannot be provided by a top level container! M
-ake sure you are not using [${cl.name}] inside a service that is Singleton Scoped (or does not have scope specified)
-						`
-					);
-				}
-				return this.constructAndSave(cl);
-			} else {
-				return injectorFactory.with(this).construct(cl);
-			}
-		} else {
-			return this.serviceMap.get(key) || this.parent?.get(key);
-		}
-	}
 }
 
 export { component as Component } from "../decorators/component";
 export { inject as Inject } from "../decorators/inject";
-export const GlobalDiContainer = DiContainer.getInstance();
+export const GlobalDiContainer: IDIContainer = DiContainer.getInstance();

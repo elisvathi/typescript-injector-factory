@@ -12,6 +12,7 @@ type OnRouteRegistered = <T>(payload: {
 	class: Class<T>;
 	controllerPath?: string;
 	methodPath?: string;
+	methodName: string | symbol;
 	verb: Verb | string;
 	paramTypes: Class[];
 	returnType: Class;
@@ -53,6 +54,7 @@ export class EndpointRegistry {
 									class: classMeta.class,
 									controllerPath: classMeta.path,
 									methodPath: methodMeta.path,
+									methodName: methodMeta.name,
 									paramTypes: methodMeta.paramTypes,
 									returnType: methodMeta.returnType,
 									verb: verb,

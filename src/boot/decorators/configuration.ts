@@ -1,4 +1,4 @@
 import { createClassDecorator } from "../../decorators/class-decorator";
 
-export const [configuration, configurationExtractor] =
+export const [Configuration, configurationExtractor] =
 	createClassDecorator(false);

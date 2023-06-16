@@ -17,9 +17,7 @@ export class Pipeline {
 		var context = GlobalDiContainer.createChildContainer();
 		var action = new IncomingAction(context, input);
 		context.set(IncomingAction, action);
-		const controllerInstance = await injectorFactory
-			.with(context)
-			.constructAsync(controller);
+		const controllerInstance = await context.getAsync(controller);
 		const methodResult: TResponse = await injectorFactory
 			.with(context)
 			.callAsync(controllerInstance as Object, method as string); //TODO: Fix this it should accept string | symbol
