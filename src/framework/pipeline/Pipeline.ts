@@ -14,8 +14,8 @@ export class Pipeline {
 		controller: Class,
 		method: string | symbol
 	): Promise<OutgoingAction<TRequest, TResponse>> {
-		var context = GlobalDiContainer.createChildContainer();
-		var action = new IncomingAction(context, input);
+		const context = GlobalDiContainer.createChildContainer();
+		const action = new IncomingAction(context, input);
 		context.set(IncomingAction, action);
 		const controllerInstance = await context.getAsync(controller);
 		const methodResult: TResponse = await injectorFactory

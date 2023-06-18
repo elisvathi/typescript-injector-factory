@@ -39,10 +39,10 @@ function createMethodDecoratorSingle<
 	const decorator =
 		(...args: TArgs) =>
 		<T>(
-			target: Object,
-			propertyKey: string | symbol,
-			descriptor: TypedPropertyDescriptor<T>
-		) => {
+				target: Object,
+				propertyKey: string | symbol,
+				descriptor: TypedPropertyDescriptor<T>
+			) => {
 			const meta = transformer(
 				{
 					target: target.constructor as Class,
@@ -79,10 +79,10 @@ function createMethodDecoratorMulti<TMeta, TArgs extends unknown[] = unknown[]>(
 	const decorator =
 		(...args: TArgs) =>
 		<T>(
-			target: Object,
-			propertyKey: string | symbol,
-			descriptor: TypedPropertyDescriptor<T>
-		) => {
+				target: Object,
+				propertyKey: string | symbol,
+				descriptor: TypedPropertyDescriptor<T>
+			) => {
 			const meta = transformer(
 				{
 					target: target.constructor as Class,

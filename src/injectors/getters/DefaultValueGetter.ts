@@ -22,15 +22,15 @@ export class DefaultValueGetter<TContext, TReturn = unknown> extends AbstractVal
 			this.fn =
 				(async: boolean) =>
 				<T extends Object>(ctx: TContext, instance: T) =>
-					fn(
-						this.buildInjectorPayload(
-							async,
-							ctx,
-							instance,
-							propertyKey,
-							parameterIndex
-						)
-					);
+						fn(
+							this.buildInjectorPayload(
+								async,
+								ctx,
+								instance,
+								propertyKey,
+								parameterIndex
+							)
+						);
 		}
 	}
 

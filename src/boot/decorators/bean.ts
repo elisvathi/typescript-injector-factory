@@ -18,6 +18,7 @@ export const [Bean, beanExtractor] = createMethodDecorator(
 		}
 		return {
 			key: options?.key || payload.returnType,
+			isPromise: returnType == Promise,
 			scope: options?.scope || ServiceScope.SINGLETON,
 		};
 	}

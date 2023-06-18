@@ -1,6 +1,6 @@
-import { Class } from '../../utilityTypes'
-import type { CreateInjectorPayload } from '../types'
-import { extractParameterType, extractPropertyType } from '../../extractors'
+import { Class } from "../../utilityTypes";
+import type { CreateInjectorPayload } from "../types";
+import { extractParameterType, extractPropertyType } from "../../extractors";
 
 export abstract class AbstractValueGetter<TContext, TReturn = unknown> {
 	protected buildInjectorPayload<T extends Object> (
@@ -10,11 +10,11 @@ export abstract class AbstractValueGetter<TContext, TReturn = unknown> {
 		propertyKey: string | symbol | undefined,
 		parameterIndex?: number
 	): CreateInjectorPayload<TContext, T> {
-		let type: Class | undefined = undefined
+		let type: Class | undefined = undefined;
 		if (Number.isFinite(parameterIndex) && parameterIndex !== undefined) {
-			type = extractParameterType(runtimeClassInstance, propertyKey, parameterIndex)
+			type = extractParameterType(runtimeClassInstance, propertyKey, parameterIndex);
 		} else if (propertyKey) {
-			type = extractPropertyType(runtimeClassInstance, propertyKey)
+			type = extractPropertyType(runtimeClassInstance, propertyKey);
 		}
 		return {
 			target: runtimeClassInstance.constructor as Class<T>,
@@ -26,7 +26,7 @@ export abstract class AbstractValueGetter<TContext, TReturn = unknown> {
 			type,
 			isProperty: !Number.isFinite(parameterIndex),
 			isParameter: parameterIndex !== undefined && propertyKey !== undefined
-		}
+		};
 	}
 
 	abstract call<T extends Object> (

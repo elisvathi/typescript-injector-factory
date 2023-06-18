@@ -21,18 +21,18 @@ function createClassDecoratorSingle<TMeta, TArgs extends unknown[] = []>(
 	const map = new Map<Class, TMeta>();
 	const decorator =
 		(...args: TArgs) =>
-		(target: Class) => {
-			const saveData = transformer(
-				{
-					class: target,
-					constructorParameters: extractMethodParamTypes(
-						target.prototype
-					),
-				},
-				...args
-			);
-			map.set(target, saveData);
-		};
+			(target: Class) => {
+				const saveData = transformer(
+					{
+						class: target,
+						constructorParameters: extractMethodParamTypes(
+							target.prototype
+						),
+					},
+					...args
+				);
+				map.set(target, saveData);
+			};
 	const extracors: ClassExtractors<TMeta> = {
 		getClasses: () => Array.from(map.keys()),
 		getValue: (cl: Class) => map.get(cl),
@@ -49,20 +49,20 @@ function createClassDecoratorMulti<
 	const map = new Map<Class, TMeta[]>();
 	const decorator =
 		(...args: TArgs) =>
-		(target: Class) => {
-			const saveData = transformer(
-				{
-					class: target,
-					constructorParameters: extractMethodParamTypes(
-						target.prototype
-					),
-				},
-				...args
-			);
-			const current = map.get(target) || [];
-			current.push(saveData);
-			map.set(target, current);
-		};
+			(target: Class) => {
+				const saveData = transformer(
+					{
+						class: target,
+						constructorParameters: extractMethodParamTypes(
+							target.prototype
+						),
+					},
+					...args
+				);
+				const current = map.get(target) || [];
+				current.push(saveData);
+				map.set(target, current);
+			};
 	const extracors: ClassExtractors<TMeta[]> = {
 		getClasses: () => Array.from(map.keys()),
 		getValue: (cl: Class) => map.get(cl),

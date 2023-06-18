@@ -25,5 +25,5 @@ app.use("*", async (request, response) => {
 });
 
 app.listen(8080, "0.0.0.0", () => {
-	console.log(`Listening to 8080`);
+	console.log("Listening to 8080");
 });

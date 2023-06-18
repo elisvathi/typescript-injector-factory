@@ -1,8 +1,5 @@
 import type { Class } from "../utilityTypes";
 
-export type InjectorFactoryOptions = {
-	injectPropertiesBeforeConstructor: boolean;
-};
 export type CreateInjectorPayloadBase<TContext, TClass extends Object> = {
 	context: TContext;
 	type?: Class;

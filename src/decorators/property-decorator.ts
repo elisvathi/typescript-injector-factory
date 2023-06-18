@@ -26,21 +26,21 @@ function createPropertyDecoratorSingle<
 	const classMap: Map<Class, Map<string | symbol, TMeta>> = new Map();
 	const decorator =
 		(...args: TArgs) =>
-		(target: Object, propertyKey: string | symbol) => {
-			const meta = transformer(
-				{
-					target: target.constructor as Class,
-					name: propertyKey,
-					type: extractPropertyType(target, propertyKey),
-				},
-				...args
-			);
-			const classData =
+			(target: Object, propertyKey: string | symbol) => {
+				const meta = transformer(
+					{
+						target: target.constructor as Class,
+						name: propertyKey,
+						type: extractPropertyType(target, propertyKey),
+					},
+					...args
+				);
+				const classData =
 				classMap.get(target.constructor as Class) ||
 				new Map<string | symbol, TMeta>();
-			classData.set(propertyKey, meta);
-			classMap.set(target.constructor as Class, classData);
-		};
+				classData.set(propertyKey, meta);
+				classMap.set(target.constructor as Class, classData);
+			};
 	const extractors: PropertyExtractors<TMeta> = {
 		decoratedClasses: () => Array.from(classMap.keys()),
 		decoratedProperties: (cl: Class) =>
@@ -60,23 +60,23 @@ function createPropertyDecoratorMulti<
 	const classMap: Map<Class, Map<string | symbol, TMeta[]>> = new Map();
 	const decorator =
 		(...args: TArgs) =>
-		(target: Object, propertyKey: string | symbol) => {
-			const meta = transformer(
-				{
-					target: target.constructor as Class,
-					name: propertyKey,
-					type: extractPropertyType(target, propertyKey),
-				},
-				...args
-			);
-			const classData =
+			(target: Object, propertyKey: string | symbol) => {
+				const meta = transformer(
+					{
+						target: target.constructor as Class,
+						name: propertyKey,
+						type: extractPropertyType(target, propertyKey),
+					},
+					...args
+				);
+				const classData =
 				classMap.get(target.constructor as Class) ||
 				new Map<string | symbol, TMeta[]>();
-			const existing = classData.get(propertyKey) || [];
-			existing.push(meta);
-			classData.set(propertyKey, existing);
-			classMap.set(target.constructor as Class, classData);
-		};
+				const existing = classData.get(propertyKey) || [];
+				existing.push(meta);
+				classData.set(propertyKey, existing);
+				classMap.set(target.constructor as Class, classData);
+			};
 	const extractors: PropertyExtractors<TMeta[]> = {
 		decoratedClasses: () => Array.from(classMap.keys()),
 		decoratedProperties: (cl: Class) =>

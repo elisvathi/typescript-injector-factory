@@ -5,12 +5,12 @@ import { IncomingAction } from "../action/IncomingAction";
 const requestPropertyExtractor = <TArgs extends unknown[] = []>(
 	fn: (request: ActionRequest, ...args: TArgs) => unknown
 ) =>
-	injectorFactory.createInjector((payload, ...injArgs: TArgs) => {
-		const action = payload.context.get<IncomingAction>(IncomingAction);
-		if (action) {
-			return fn(action.request, ...injArgs);
-		}
-	});
+		injectorFactory.createInjector((payload, ...injArgs: TArgs) => {
+			const action = payload.context.get<IncomingAction>(IncomingAction);
+			if (action) {
+				return fn(action.request, ...injArgs);
+			}
+		});
 
 /**
  * Full Request

@@ -10,7 +10,7 @@ describe("Injections tests", () => {
 			@inject()
 			public value?: number;
 		}
-		var instance = factory.with({ value: 123 }).construct(Test);
+		const instance = factory.with({ value: 123 }).construct(Test);
 		expect(instance.value).toBe(123);
 	});
 
@@ -20,7 +20,7 @@ describe("Injections tests", () => {
 				return value;
 			}
 		}
-		var instance = new Test();
+		const instance = new Test();
 		expect(factory.with({ value: 123 }).call(instance, "method")).toBe(123);
 	});
 
@@ -42,12 +42,12 @@ describe("Default injector tests", () => {
 		class Test {
 			public method(
 				@inject() _value: number,
-				secondValue: number
+					secondValue: number
 			): number {
 				return secondValue;
 			}
 		}
-		var instance = new Test();
+		const instance = new Test();
 		expect(
 			factory
 				.with({ value: 123, defaultValue: 456 })
@@ -82,7 +82,7 @@ describe("Aync injectors", () => {
 			@inject()
 			public value?: number;
 		}
-		var instance = await factory.with({ value: 123 }).constructAsync(Test);
+		const instance = await factory.with({ value: 123 }).constructAsync(Test);
 		expect(instance.value).toBe(123);
 	});
 
@@ -92,7 +92,7 @@ describe("Aync injectors", () => {
 				return value;
 			}
 		}
-		var instance = new Test();
+		const instance = new Test();
 		expect(
 			await factory.with({ value: 123 }).callAsync(instance, "method")
 		).toBe(123);

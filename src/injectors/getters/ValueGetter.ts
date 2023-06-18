@@ -23,16 +23,16 @@ export class ValueGetter<
 		this.fn =
 			(async: boolean) =>
 			<T extends Object>(ctx: TContext, instance: T) =>
-				fn(
-					this.buildInjectorPayload(
-						async,
-						ctx,
-						instance,
-						propertyKey,
-						parameterIndex
-					),
-					...args
-				);
+					fn(
+						this.buildInjectorPayload(
+							async,
+							ctx,
+							instance,
+							propertyKey,
+							parameterIndex
+						),
+						...args
+					);
 	}
 
 	public call<T extends Object>(

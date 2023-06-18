@@ -8,13 +8,9 @@ export interface InjectorResolver {
 	callAsync<T extends Object, M extends MethodOf<T>, TReturn>(
 		cl: T,
 		name: string,
-		options?: {
-			sequential?: boolean;
-		}
 	): Promise<TReturn>;
 	construct<T>(cl: Class<T>): T;
 	constructAsync<T>(
 		cl: Class<T>,
-		options?: { sequential: boolean }
 	): Promise<T>;
 }

@@ -1,5 +1,5 @@
-import { Class, MethodOf } from "../../utilityTypes";
-import { InjectorFactory } from "./injectorFactory";
+import { type Class, type MethodOf } from "../../utilityTypes";
+import { type InjectorFactory } from "./injectorFactory";
 import type { InjectorResolver } from "./InjectorResolver";
 
 /**
@@ -44,14 +44,12 @@ export class BoundFactory<TContext> implements InjectorResolver {
 	public async callAsync<T extends Object, M extends keyof T, TReturn>(
 		cl: T,
 		name: string,
-		options?: { sequential: boolean }
 	): Promise<TReturn> {
 		// TODO: Fix return type
 		const args = await this.factory.methodArgumentsAsync(
 			this.context,
 			cl,
 			name,
-			options
 		);
 		// TODO: Fix type
 		return (cl as any)[name](...args);
@@ -59,19 +57,16 @@ export class BoundFactory<TContext> implements InjectorResolver {
 
 	public async constructAsync<T>(
 		cl: Class<T>,
-		options: { sequential: boolean }
 	): Promise<T> {
 		const proto = Object.create(cl.prototype);
 		const properties = await this.factory.fieldsAsync(
 			this.context,
 			proto,
-			options
 		);
 		const constructorArgs = await this.factory.methodArgumentsAsync(
 			this.context,
 			proto,
 			undefined,
-			options
 		);
 		return this.constructInstance(cl, constructorArgs, properties, proto);
 	}
@@ -82,7 +77,7 @@ export class BoundFactory<TContext> implements InjectorResolver {
 		properties: Record<string, unknown>,
 		proto: T
 	): T {
-		const applyProps = () => {
+		const applyProps = (): void => {
 			Object.entries(properties).forEach(([key, value]) => {
 				proto[key as keyof T] = value as T[keyof T];
 			});
@@ -93,13 +88,8 @@ export class BoundFactory<TContext> implements InjectorResolver {
 			Object.assign(proto, instance);
 		};
 
-		if (this.factory.options.injectPropertiesBeforeConstructor) {
-			applyProps();
-			applyConstructor();
-		} else {
-			applyProps();
-			applyConstructor();
-		}
+		applyConstructor();
+		applyProps();
 
 		return proto;
 	}

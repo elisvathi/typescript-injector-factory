@@ -42,33 +42,33 @@ function createParameterDecoratorSingle<
 	> = new Map();
 	const decorator =
 		(...args: TArgs) =>
-		(
-			target: Object,
-			propertyKey: string | symbol | undefined,
-			parameterIndex: number
-		) => {
-			const meta = transformer(
-				{
-					target: target.constructor as Class,
-					name: propertyKey,
-					parameterIndex,
-					type: extractParameterType(
-						target,
-						propertyKey,
-						parameterIndex
-					),
-				},
-				...args
-			);
-			const classData =
+			(
+				target: Object,
+				propertyKey: string | symbol | undefined,
+				parameterIndex: number
+			) => {
+				const meta = transformer(
+					{
+						target: target.constructor as Class,
+						name: propertyKey,
+						parameterIndex,
+						type: extractParameterType(
+							target,
+							propertyKey,
+							parameterIndex
+						),
+					},
+					...args
+				);
+				const classData =
 				classMap.get(target.constructor as Class) ||
 				new Map<string | symbol, Map<number, TMeta>>();
-			const methodData =
+				const methodData =
 				classData.get(propertyKey) || new Map<number, TMeta>();
-			methodData.set(parameterIndex, meta);
-			classData.set(propertyKey, methodData);
-			classMap.set(target.constructor as Class, classData);
-		};
+				methodData.set(parameterIndex, meta);
+				classData.set(propertyKey, methodData);
+				classMap.set(target.constructor as Class, classData);
+			};
 	const extractors: ParameterExtractors<TMeta> = {
 		decoratedClasses: () => Array.from(classMap.keys()),
 		decoratedMethods: (cl: Class) =>
@@ -105,35 +105,35 @@ function createParameterDecoratorMulti<
 	> = new Map();
 	const decorator =
 		(...args: TArgs) =>
-		(
-			target: Object,
-			propertyKey: string | symbol | undefined,
-			parameterIndex: number
-		) => {
-			const meta = transformer(
-				{
-					target: target.constructor as Class,
-					name: propertyKey,
-					parameterIndex,
-					type: extractParameterType(
-						target,
-						propertyKey,
-						parameterIndex
-					),
-				},
-				...args
-			);
-			const classData =
+			(
+				target: Object,
+				propertyKey: string | symbol | undefined,
+				parameterIndex: number
+			) => {
+				const meta = transformer(
+					{
+						target: target.constructor as Class,
+						name: propertyKey,
+						parameterIndex,
+						type: extractParameterType(
+							target,
+							propertyKey,
+							parameterIndex
+						),
+					},
+					...args
+				);
+				const classData =
 				classMap.get(target.constructor as Class) ||
 				new Map<string | symbol, Map<number, TMeta[]>>();
-			const methodData =
+				const methodData =
 				classData.get(propertyKey) || new Map<number, TMeta[]>();
-			const paramData = methodData.get(parameterIndex) || [];
-			paramData.push(meta);
-			methodData.set(parameterIndex, paramData);
-			classData.set(propertyKey, methodData);
-			classMap.set(target.constructor as Class, classData);
-		};
+				const paramData = methodData.get(parameterIndex) || [];
+				paramData.push(meta);
+				methodData.set(parameterIndex, paramData);
+				classData.set(propertyKey, methodData);
+				classMap.set(target.constructor as Class, classData);
+			};
 	const extractors: ParameterExtractors<TMeta[]> = {
 		decoratedClasses: () => Array.from(classMap.keys()),
 		decoratedMethods: (cl: Class) =>

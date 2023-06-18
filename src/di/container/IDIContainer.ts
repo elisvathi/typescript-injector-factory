@@ -14,6 +14,11 @@ export interface IResolverContainer {
 	): { resolver: AsyncResolver; scope: ServiceScope } | undefined;
 }
 
+export type ServiceRegistration<T = unknown> = {
+	key: string | Class<T> | Token<T>
+	scope: string
+};
+
 export interface IDIContainer {
 	get<T>(key: Class<T>): T | undefined;
 	get<T>(key: Token<T>): T | undefined;
@@ -52,4 +57,6 @@ export interface IDIContainer {
 		scope: ServiceScope
 	): void;
 	setResolver(key: string, resolver: SyncResolver, scope: ServiceScope): void;
+
+	listServices(scope: ServiceScope): Array<ServiceRegistration>;
 }

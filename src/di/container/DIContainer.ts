@@ -1,15 +1,21 @@
-import type { Class } from '../../utilityTypes'
-import { componentExtractor } from '../decorators/component'
-import { injectorFactory } from '../decorators/inject'
-import { ServiceScope } from '../types'
-import { AsyncResolver, IDIContainer, IResolverContainer, SyncResolver, } from './IDIContainer'
-import { Token } from './Token'
+import type { Class } from "../../utilityTypes";
+import { componentExtractor } from "../decorators/component";
+import { injectorFactory } from "../decorators/inject";
+import { ServiceScope } from "../types";
+import {
+	AsyncResolver,
+	IDIContainer,
+	IResolverContainer,
+	ServiceRegistration,
+	SyncResolver,
+} from "./IDIContainer";
+import { Token } from "./Token";
 
 export interface Initializable {
 	init(): Promise<void>;
 }
 
-const scopeMistmatchError = (key: Class | Token | string) => {
+const scopeMismatchError = (key: Class | Token | string) => {
 	const message = `Cannot provide [${key}] instance from this container!
 A REQUEST scoped service cannot be provided by a top level container! M
 ake sure you are not using [${key}] inside a service that is Singleton Scoped (or does not have scope specified)`;
@@ -18,8 +24,9 @@ ake sure you are not using [${key}] inside a service that is Singleton Scoped (o
 
 export function isInitializable(cl: Object): cl is Initializable {
 	return (
-		Object.getOwnPropertyNames(Object.getPrototypeOf(cl)).includes("init") &&
-		typeof (cl as any)["init"] == "function"
+		Object.getOwnPropertyNames(Object.getPrototypeOf(cl)).includes(
+			"init"
+		) && typeof (cl as any)["init"] == "function"
 	);
 }
 
@@ -35,8 +42,6 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		Class | string | Token,
 		{ resolver: AsyncResolver; scope: ServiceScope }
 	> = new Map();
-
-	private constructor() {}
 
 	public getResolver<T>(
 		key: string | Class<T> | Token<T>
@@ -93,7 +98,7 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		}
 		if (typeof key === "function") {
 			const cl = key as Class<T>;
-			let scope =
+			const scope =
 				componentExtractor.getValue(cl)?.options?.scope ||
 				ServiceScope.SINGLETON;
 			if (scope === ServiceScope.SINGLETON) {
@@ -104,7 +109,7 @@ class DiContainer implements IDIContainer, IResolverContainer {
 			}
 			if (scope === ServiceScope.REQUEST) {
 				if (!this.isChild) {
-					scopeMistmatchError(key);
+					scopeMismatchError(key);
 				}
 				return await this.constructAndSaveAsync(cl);
 			} else {
@@ -131,7 +136,7 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		}
 		if (typeof key === "function") {
 			const cl = key as Class<T>;
-			let scope =
+			const scope =
 				componentExtractor.getValue(cl)?.options?.scope ||
 				ServiceScope.SINGLETON;
 			if (scope === ServiceScope.SINGLETON) {
@@ -142,7 +147,7 @@ class DiContainer implements IDIContainer, IResolverContainer {
 			}
 			if (scope === ServiceScope.REQUEST) {
 				if (!this.isChild) {
-					scopeMistmatchError(key);
+					scopeMismatchError(key);
 				}
 				return this.constructAndSave(cl);
 			} else {
@@ -173,7 +178,14 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		resolver: AsyncResolver,
 		scope: ServiceScope
 	): void {
-		this.asyncResolvers.set(key, { resolver, scope });
+		if (this.isChild) {
+			this.parent?.setAsyncResolver(key, resolver, scope);
+		} else {
+			this.asyncResolvers.set(key, {
+				resolver,
+				scope,
+			});
+		}
 	}
 
 	public setResolver<T>(
@@ -196,7 +208,14 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		resolver: SyncResolver,
 		scope: ServiceScope
 	): void {
-		this.syncResolvers.set(key, { resolver, scope });
+		if (this.isChild) {
+			this.parent?.setResolver(key, resolver, scope);
+		} else {
+			this.syncResolvers.set(key, {
+				resolver,
+				scope,
+			});
+		}
 	}
 
 	private async getAndSaveFromResolverAsync<T>(
@@ -205,35 +224,35 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		scope: ServiceScope
 	): Promise<T | undefined> {
 		switch (scope) {
-			case ServiceScope.TRANSIENT: {
-				return await resolver<T>(this);
-			}
-			case ServiceScope.SINGLETON: {
-				if (this.isChild) {
-					return await this.parent?.getAsync(key);
-				} else {
-					const existing = this.serviceMap.get(key);
-					if (existing) {
-						return existing;
-					}
-					const value = await resolver<T>(this);
-					this.serviceMap.set(key, value);
-					return value;
+		case ServiceScope.TRANSIENT: {
+			return await resolver<T>(this);
+		}
+		case ServiceScope.SINGLETON: {
+			if (this.isChild) {
+				return await this.parent?.getAsync(key);
+			} else {
+				const existing = this.serviceMap.get(key);
+				if (existing) {
+					return existing;
 				}
+				const value = await resolver<T>(this);
+				this.serviceMap.set(key, value);
+				return value;
 			}
-			case ServiceScope.REQUEST: {
-				if (this.isChild) {
-					const existing = this.serviceMap.get(key);
-					if (existing) {
-						return existing;
-					}
-					const value = await resolver<T>(this);
-					this.serviceMap.set(key, value);
-					return value;
-				} else {
-					scopeMistmatchError(key);
+		}
+		case ServiceScope.REQUEST: {
+			if (this.isChild) {
+				const existing = this.serviceMap.get(key);
+				if (existing) {
+					return existing;
 				}
+				const value = await resolver<T>(this);
+				this.serviceMap.set(key, value);
+				return value;
+			} else {
+				scopeMismatchError(key);
 			}
+		}
 		}
 	}
 
@@ -243,35 +262,35 @@ class DiContainer implements IDIContainer, IResolverContainer {
 		scope: ServiceScope
 	): T | undefined {
 		switch (scope) {
-			case ServiceScope.TRANSIENT: {
-				return resolver<T>(this);
-			}
-			case ServiceScope.SINGLETON: {
-				if (this.isChild) {
-					return this.parent?.get(key);
-				} else {
-					const existing = this.serviceMap.get(key);
-					if (existing) {
-						return existing;
-					}
-					const value = resolver<T>(this);
-					this.serviceMap.set(key, value);
-					return value;
+		case ServiceScope.TRANSIENT: {
+			return resolver<T>(this);
+		}
+		case ServiceScope.SINGLETON: {
+			if (this.isChild) {
+				return this.parent?.get(key);
+			} else {
+				const existing = this.serviceMap.get(key);
+				if (existing) {
+					return existing;
 				}
+				const value = resolver<T>(this);
+				this.serviceMap.set(key, value);
+				return value;
 			}
-			case ServiceScope.REQUEST: {
-				if (this.isChild) {
-					const existing = this.serviceMap.get(key);
-					if (existing) {
-						return existing;
-					}
-					const value = resolver<T>(this);
-					this.serviceMap.set(key, value);
-					return value;
-				} else {
-					scopeMistmatchError(key);
+		}
+		case ServiceScope.REQUEST: {
+			if (this.isChild) {
+				const existing = this.serviceMap.get(key);
+				if (existing) {
+					return existing;
 				}
+				const value = resolver<T>(this);
+				this.serviceMap.set(key, value);
+				return value;
+			} else {
+				scopeMismatchError(key);
 			}
+		}
 		}
 	}
 
@@ -292,6 +311,44 @@ class DiContainer implements IDIContainer, IResolverContainer {
 			injectorFactory.with(this).construct(key);
 		this.serviceMap.set(key, constructed);
 		return constructed;
+	}
+
+	public listServices(scope: ServiceScope): Array<ServiceRegistration> {
+		type Key = Class | Token | string;
+		const map: Map<Key, ServiceRegistration> = new Map();
+		componentExtractor
+			.getClasses()
+			.map((cl) => {
+				const key = componentExtractor.getValue(cl)?.options?.key || cl;
+				const scope =
+					componentExtractor.getValue(cl)?.options?.scope ||
+					ServiceScope.SINGLETON;
+				return {
+					key,
+					scope,
+				};
+			})
+			.filter(service=>service.scope === scope)
+			.forEach(service=>map.set(service.key, service));
+		Array.from( this.syncResolvers.entries())
+			.map(([key, value]) => {
+				return {
+					key,
+					scope: value.scope,
+				};
+			})
+			.filter(service=>service.scope === scope)
+			.forEach(service=>map.set(service.key, service));
+		Array.from( this.syncResolvers.entries())
+			.map(([key, value]) => {
+				return {
+					key,
+					scope: value.scope,
+				};
+			})
+			.filter(service=>service.scope === scope)
+			.forEach(service=>map.set(service.key, service));
+		return Array.from(map.values());
 	}
 }
 
